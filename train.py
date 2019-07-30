@@ -6,7 +6,6 @@ os.environ['CUDA_VISIBLE_DEVICES']='0'
 import fastai
 from fastai import *
 from fastai.vision import *
-from fastai.callbacks.tensorboard import *
 from fastai.vision.gan import *
 from fasterai.generators import *
 from fasterai.critics import *
@@ -37,8 +36,20 @@ crit_name = proj_id + '_crit'
 name_gen = proj_id + '_image_gen'
 path_gen = path/name_gen
 
-TENSORBOARD_PATH = path / ('tensorboard/' + proj_id)
+# Prevent CUDA out of memory errors
+# from ColorizeTrainingStableLargeBatch.ipynb
 
+# Set limit of GPU used before swapping to tensors to host memory
+max_gpu_mem = 7
+
+def gb_to_bytes(gb):
+    return gb*1024*1024*1024
+
+# Enable PyTorch LMS
+torch.cuda.set_enabled_lms(True)
+
+# Set LMS limit
+torch.cuda.set_limit_lms(gb_to_bytes(max_gpu_mem))
 
 def get_data(bs:int, sz:int, keep_pct:float, random_seed=None, samplers=None):
     return get_colorize_data(sz=sz, bs=bs, crappy_path=path_lr, good_path=path_hr, 
